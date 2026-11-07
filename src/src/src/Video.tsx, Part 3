@@ -1,0 +1,366 @@
+const FACE = "M105,285 a95,95 0 1,0 190,0 a95,95 0 1,0 -190,0";
+const FRINGE = "M108,262 Q118,172 200,170 Q282,172 292,262 Q246,214 200,224 Q154,214 108,262 Z";
+const EYE_L = "M163,292 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0";
+const EYE_R = "M223,292 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0";
+const MOUTH = "M180,333 Q200,348 220,333";
+
+const WrapperArt: React.FC<{sheen: number}> = ({sheen}) => (
+  <svg width={400} height={560} viewBox="0 0 400 560">
+    <defs>
+      <linearGradient id="wrapGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#FBD233" />
+        <stop offset="1" stopColor="#F0AC06" />
+      </linearGradient>
+      <pattern id="crimp" width="10" height="30" patternUnits="userSpaceOnUse">
+        <rect width="5" height="30" fill="rgba(0,0,0,0.14)" />
+      </pattern>
+      <clipPath id="wrapClip">
+        <rect x="20" y="10" width="360" height="540" rx="14" />
+      </clipPath>
+    </defs>
+    <rect x="20" y="10" width="360" height="540" rx="14" fill="url(#wrapGrad)" />
+    <rect x="20" y="10" width="360" height="34" fill="url(#crimp)" />
+    <rect x="20" y="516" width="360" height="34" fill="url(#crimp)" />
+    <rect x="20" y="62" width="360" height="74" fill="#D7191F" />
+    <text x="200" y="116" textAnchor="middle" fontFamily={FONT} fontWeight={900} fontSize={54} fill="#fff" letterSpacing="2">
+      PARLE-G
+    </text>
+    <circle cx="200" cy="285" r="112" fill="#fff" />
+    <path d={FACE} fill="#F4C9A4" />
+    <path d={FRINGE} fill="#2A1A13" />
+    <path d={EYE_L} fill="#2A1A13" />
+    <path d={EYE_R} fill="#2A1A13" />
+    <ellipse cx="148" cy="318" rx="16" ry="10" fill="#EE8F86" opacity="0.7" />
+    <ellipse cx="252" cy="318" rx="16" ry="10" fill="#EE8F86" opacity="0.7" />
+    <path d={MOUTH} fill="none" stroke="#B5473B" strokeWidth="4" strokeLinecap="round" />
+    <text x="200" y="478" textAnchor="middle" fontFamily={FONT} fontWeight={800} fontSize={28} fill="#D7191F" letterSpacing="3">
+      GLUCOSE BISCUITS
+    </text>
+    <g clipPath="url(#wrapClip)">
+      <rect x={sheen} y="-20" width="70" height="620" fill="#fff" opacity="0.2" transform="skewX(-18)" />
+    </g>
+  </svg>
+);
+
+const HookArt: React.FC<{dur: number}> = ({dur}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const zoom = interpolate(frame, [0, dur], [1, 1.5], {...clamp, easing: Easing.inOut(Easing.cubic)});
+  const enter = spring({frame, fps, config: {damping: 200}});
+  const rot = interpolate(frame, [0, dur], [-4, 2], clamp);
+  const out = interpolate(frame, [dur - OV, dur], [1, 0], clamp);
+  const stamp = spring({
+    frame: frame - sec(2.0),
+    fps,
+    config: {damping: 9, stiffness: 180, mass: 0.7},
+  });
+  const sheen = interpolate(frame, [0, dur], [-200, 500], clamp);
+
+  return (
+    <AbsoluteFill style={{opacity: out}}>
+      <div
+        style={{
+          position: "absolute",
+          left: 340,
+          top: 690,
+          width: 400,
+          height: 560,
+          transform: `scale(${zoom * (0.85 + 0.15 * enter)}) rotate(${rot}deg)`,
+          filter: "drop-shadow(0 50px 60px rgba(0,0,0,0.75))",
+        }}
+      >
+        <WrapperArt sheen={sheen} />
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          left: 140,
+          top: 980,
+          width: 800,
+          textAlign: "center",
+          transform: `rotate(-9deg) scale(${Math.max(0, stamp)})`,
+          opacity: clamp01(stamp * 2),
+        }}
+      >
+        <div
+          style={{
+            display: "inline-block",
+            padding: "14px 36px",
+            border: `9px solid ${C.red}`,
+            borderRadius: 10,
+            background: "rgba(0,0,0,0.6)",
+            color: C.red,
+            fontSize: 56,
+            fontWeight: 900,
+            lineHeight: 1.05,
+            letterSpacing: 2,
+          }}
+        >
+          WO BACCHI
+          <br />
+          ASLI NAHI HAI
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const GirlSketch: React.FC<{progress: number; width: number}> = ({progress, width}) => {
+  const part = (a: number, b: number) => 1 - clamp01((progress - a) / (b - a));
+  const base = {
+    fill: "none",
+    stroke: C.white,
+    strokeWidth: 3.5,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    pathLength: 1,
+    strokeDasharray: 1,
+  } as const;
+  return (
+    <svg width={width} height={(width * 250) / 260} viewBox="70 150 260 250">
+      <path d="M200,150 L200,395" stroke={C.amber} strokeOpacity={0.35} strokeWidth={1.5} fill="none" strokeDasharray="6 8" />
+      <path d="M72,285 L328,285" stroke={C.amber} strokeOpacity={0.35} strokeWidth={1.5} fill="none" strokeDasharray="6 8" />
+      <path d={FACE} {...base} strokeDashoffset={part(0, 0.45)} />
+      <path d={FRINGE} {...base} strokeDashoffset={part(0.3, 0.7)} />
+      <path d={EYE_L} {...base} strokeDashoffset={part(0.65, 0.8)} />
+      <path d={EYE_R} {...base} strokeDashoffset={part(0.7, 0.85)} />
+      <path d={MOUTH} {...base} strokeDashoffset={part(0.82, 1)} />
+    </svg>
+  );
+};
+
+const SketchScene: React.FC<{dur: number}> = ({dur}) => {
+  const frame = useCurrentFrame();
+  const progress = Easing.inOut(Easing.cubic)(clamp01(frame / 75));
+  const out = interpolate(frame, [dur - OV, dur], [1, 0], clamp);
+  const capOpacity = interpolate(frame, [80, 100], [0, 1], clamp);
+  return (
+    <AbsoluteFill style={{opacity: out}}>
+      <div style={{position: "absolute", top: 700, left: 0, right: 0, display: "flex", justifyContent: "center"}}>
+        <GirlSketch progress={progress} width={560} />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          top: 1262,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          opacity: capOpacity,
+          fontSize: 32,
+          fontWeight: 800,
+          letterSpacing: 6,
+          color: C.amber,
+        }}
+      >
+        ILLUSTRATION · EVEREST · 1960s
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const NameCard: React.FC<{caption: string; name: [string, string]; dur: number}> = ({caption, name, dur}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const out = interpolate(frame, [dur - OV, dur], [1, 0], clamp);
+  const capIn = spring({frame, fps, config: {damping: 200}});
+  const p1 = spring({frame: frame - 6, fps, config: {damping: 11, stiffness: 140, mass: 0.6}});
+  const p2 = spring({frame: frame - 11, fps, config: {damping: 11, stiffness: 140, mass: 0.6}});
+  const c1 = interpolate(frame, [38, 46], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
+  const c2 = interpolate(frame, [44, 52], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
+  const shake = frame >= 38 && frame < 52 ? Math.sin(frame * 2.4) * (1 - c2) * 14 : 0;
+  const nameDim = interpolate(frame, [44, 56], [1, 0.45], clamp);
+
+  const lineStyle = (p: number): React.CSSProperties => ({
+    opacity: clamp01(p * 1.5),
+    transform: `scale(${interpolate(p, [0, 1], [2, 1])})`,
+  });
+
+  return (
+    <AbsoluteFill style={{opacity: out}}>
+      <div style={{position: "absolute", left: 40, right: 40, top: 520, textAlign: "center"}}>
+        <div
+          style={{
+            fontSize: 44,
+            fontWeight: 600,
+            letterSpacing: 2,
+            color: C.dim,
+            opacity: capIn,
+            transform: `translateY(${(1 - capIn) * 30}px)`,
+            marginBottom: 24,
+          }}
+        >
+          {caption}
+        </div>
+        <div
+          style={{
+            position: "relative",
+            display: "inline-block",
+            padding: "10px 40px",
+            transform: `translateX(${shake}px)`,
+            opacity: nameDim,
+          }}
+        >
+          <div style={{fontSize: 128, fontWeight: 900, lineHeight: 0.98, letterSpacing: -3, textShadow: "0 6px 40px rgba(0,0,0,0.85)"}}>
+            <div style={lineStyle(p1)}>{name[0]}</div>
+            <div style={lineStyle(p2)}>{name[1]}</div>
+          </div>
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            style={{position: "absolute", left: 0, top: 0, width: "100%", height: "100%", overflow: "visible"}}
+          >
+            <path d="M0,0 L100,100" stroke={C.red} strokeWidth={14} strokeLinecap="round" vectorEffect="non-scaling-stroke" fill="none" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - c1} />
+            <path d="M100,0 L0,100" stroke={C.red} strokeWidth={14} strokeLinecap="round" vectorEffect="non-scaling-stroke" fill="none" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - c2} />
+          </svg>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const BigNumber: React.FC<{dur: number}> = ({dur}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const t = Easing.out(Easing.cubic)(clamp01(frame / 55));
+  const value = Math.round(5000 * t);
+  const s = spring({frame, fps, config: {damping: 14, stiffness: 120}});
+  const out = interpolate(frame, [dur - OV, dur], [1, 0], clamp);
+  return (
+    <AbsoluteFill style={{opacity: out * clamp01(s * 2)}}>
+      <div
+        style={{
+          position: "absolute",
+          top: 760,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          transform: `scale(${0.8 + 0.2 * s})`,
+        }}
+      >
+        <div style={{fontSize: 40, fontWeight: 800, letterSpacing: 8, color: C.dim}}>RETAIL SALES · 2013</div>
+        <div
+          style={{
+            fontSize: 260,
+            fontWeight: 900,
+            color: C.amber,
+            lineHeight: 1,
+            letterSpacing: -8,
+            fontVariantNumeric: "tabular-nums",
+            textShadow: "0 0 90px rgba(255,178,36,0.55)",
+          }}
+        >
+          <span style={{fontSize: 150}}>₹</span>
+          {value.toLocaleString("en-US")}
+        </div>
+        <div style={{fontSize: 96, fontWeight: 900, letterSpacing: 16}}>CRORE</div>
+        <div style={{marginTop: 22, fontSize: 24, fontWeight: 600, color: C.dim, letterSpacing: 2}}>
+          Source: Wikipedia · Parle Products
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const CtaArt: React.FC = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const s = spring({frame: frame - 18, fps, config: {damping: 10, stiffness: 140}});
+  const pulse = 1 + 0.06 * Math.sin(frame / 5);
+  const bounce = Math.sin(frame / 4) * 14;
+  return (
+    <AbsoluteFill>
+      <div
+        style={{
+          position: "absolute",
+          top: 930,
+          left: 0,
+          right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 20,
+          transform: `scale(${clamp01(s) * pulse})`,
+        }}
+      >
+        <svg width={220} height={200} viewBox="0 0 220 200">
+          <path
+            d="M30,20 H190 Q205,20 205,35 V120 Q205,135 190,135 H100 L60,175 V135 H30 Q15,135 15,120 V35 Q15,20 30,20Z"
+            fill="none"
+            stroke={C.amber}
+            strokeWidth={8}
+            strokeLinejoin="round"
+          />
+          <circle cx={75} cy={78} r={9} fill={C.amber} />
+          <circle cx={110} cy={78} r={9} fill={C.amber} />
+          <circle cx={145} cy={78} r={9} fill={C.amber} />
+        </svg>
+        <div style={{fontSize: 64, fontWeight: 900, letterSpacing: 10, color: C.amber}}>COMMENT</div>
+        <svg width={90} height={90} viewBox="0 0 90 90" style={{transform: `translateY(${bounce}px)`}}>
+          <path d="M45,10 V68 M20,45 L45,70 L70,45" fill="none" stroke={C.white} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const ACT_BOUNDARIES = [3, 15, 28, 45, 57];
+
+export const Video: React.FC = () => {
+  return (
+    <AbsoluteFill style={{backgroundColor: C.bg, fontFamily: FONT, overflow: "hidden"}}>
+      <Background />
+
+      <div style={{position: "absolute", left: 0, top: 590, width: 1080, height: 960}}>
+        <MapLayer />
+      </div>
+
+      <Sequence from={0} durationInFrames={sec(3) + OV} name="Hook wrapper">
+        <HookArt dur={sec(3) + OV} />
+      </Sequence>
+
+      <Sequence from={sec(39.6)} durationInFrames={sec(45) - sec(39.6) + OV} name="Sketch drawing">
+        <SketchScene dur={sec(45) - sec(39.6) + OV} />
+      </Sequence>
+
+      <Sequence from={sec(48.8)} durationInFrames={sec(52.6) - sec(48.8) + OV} name="Big number">
+        <BigNumber dur={sec(52.6) - sec(48.8) + OV} />
+      </Sequence>
+
+      <Sequence from={sec(57)} durationInFrames={DURATION - sec(57)} name="CTA art">
+        <CtaArt />
+      </Sequence>
+
+      {NAMES.map((n, i) => {
+        const dur = sec(n.to) - sec(n.from) + OV;
+        return (
+          <Sequence key={i} from={sec(n.from)} durationInFrames={dur} name={`Name ${i + 1}`}>
+            <NameCard caption={n.caption} name={n.name} dur={dur} />
+          </Sequence>
+        );
+      })}
+
+      {LINES.map((l, i) => {
+        const from = sec(l.from);
+        const isLast = sec(l.to) >= DURATION;
+        const dur = Math.min(sec(l.to) - from + OV, DURATION - from);
+        return (
+          <Sequence key={i} from={from} durationInFrames={dur} name={`Line ${i + 1}`}>
+            <LineScene line={l} dur={dur} isLast={isLast} />
+          </Sequence>
+        );
+      })}
+
+      <TimelineCounter />
+
+      {ACT_BOUNDARIES.map((b) => (
+        <Sequence key={b} from={sec(b) - 8} durationInFrames={22} name={`Sweep ${b}s`}>
+          <LightSweep dur={22} />
+        </Sequence>
+      ))}
+
+      <FilmOverlay />
+    </AbsoluteFill>
+  );
+};
